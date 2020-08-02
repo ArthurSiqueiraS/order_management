@@ -1,7 +1,9 @@
 import React from 'react';
-import client from '../packs/axios.js'
+import client from '../packs/axios.js';
+import { connect } from 'react-redux';
+import notificationActions from '../packs/store/notifications/actions';
 
-export default class Orders extends React.Component {
+class Dashboard extends React.Component {
   state = {
     orders: [],
     numberQuery: null,
@@ -55,10 +57,17 @@ export default class Orders extends React.Component {
       })
   }
 
+  pushNotification(notification) {
+    this.props.dispatch(notificationActions.setNotification(notification))
+  }
+
   createOrder() {
     client.post('orders')
-      .then(() => {
+      .then((response) => {
         this.fetchOrders()
+
+        const order = response.data
+        this.pushNotification({ text: `Order #${order.id} created`, color: 'info' })
       })
       .catch(error => {
         console.log(error.message)
@@ -69,6 +78,10 @@ export default class Orders extends React.Component {
     client.put(`orders/${order.id}`)
       .then(() => {
         this.fetchOrders()
+        const transition = order.state == 'pending' ? 'started' : 'completed'
+        const color = order.state == 'pending' ? 'warning' : 'success'
+
+        this.pushNotification({ text: `Order #${order.id} ${transition}.`, color })
       })
       .catch(error => {
         console.log(error.message)
@@ -79,6 +92,8 @@ export default class Orders extends React.Component {
     client.delete(`orders/${order.id}`)
       .then(() => {
         this.fetchOrders()
+
+        this.pushNotification({ text: `Order #${order.id} deleted.`, color: 'danger' })
       })
       .catch(error => {
         console.log(error.message)
@@ -178,3 +193,5 @@ export default class Orders extends React.Component {
     )
   }
 }
+
+export default connect()(Dashboard)
