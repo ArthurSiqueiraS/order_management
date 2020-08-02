@@ -4,6 +4,7 @@ import client from '../packs/axios.js'
 export default class Orders extends React.Component {
   state = {
     orders: [],
+    numberQuery: null,
     orderStates: {
       pending: {
         name: 'Pending',
@@ -11,7 +12,8 @@ export default class Orders extends React.Component {
         transition: {
           name: 'Start',
           color: 'warning'
-        }
+        },
+        filter: false
       },
       in_progress: {
         name: 'In progress',
@@ -19,11 +21,13 @@ export default class Orders extends React.Component {
         transition: {
           name: 'Complete',
           color: 'success'
-        }
+        },
+        filter: false
       },
       completed: {
         name: 'Completed',
-        color: 'success'
+        color: 'success',
+        filter: false
       },
     }
   }
@@ -37,7 +41,12 @@ export default class Orders extends React.Component {
       this.state.orderStates[stateKey].filter
     ))
 
-    client.get('orders')
+    client.get('orders', {
+      params: {
+        number: this.state.numberQuery,
+        states
+      }
+    })
       .then(response => {
         this.setState({ orders: response.data })
       })
@@ -108,20 +117,64 @@ export default class Orders extends React.Component {
     })
   }
 
+  handleNumberInput(value) {
+    this.setState({ numberQuery: value }, this.fetchOrders)
+  }
+
+  toggleStateFilter(stateKey) {
+    const newStates = { ...this.state.orderStates }
+    newStates[stateKey].filter = !newStates[stateKey].filter
+
+    this.setState({ orderStates: newStates }, this.fetchOrders)
+  }
+
   render() {
     const orders = this.orders()
 
     return (
       <div className="container">
         <div className="row" style={{ margin: '32px 0' }}>
-          <button className="btn btn-primary" onClick={() => this.createOrder()}>
-            Add new order
-          </button>
+          <div className="col-12 col-md-6 col-lg-4 input-group">
+            <input
+              type="number"
+              min="1"
+              className="form-control"
+              placeholder="Search by order #"
+              onChange={(e) => this.handleNumberInput(e.target.value)}
+            />
+          </div>
+          <div
+            className="col-12 col-md-6 col-lg-4 mr-0 my-4 mt-md-0 mb-lg-0 form-check form-check-inline"
+            style={{ display: 'flex', justifyContent: 'center' }}
+          >
+            {Object.keys(this.state.orderStates).map((stateKey, i) => {
+              const state = this.state.orderStates[stateKey]
+
+              return (
+                <div key={stateKey} className="pr-4">
+                  <input
+                    className="form-check-input"
+                    type="checkbox" id={'checkbox-state-' + i}
+                    onChange={() => this.toggleStateFilter(stateKey)}
+                    checked={state.filter}
+                  />
+                  <label className="form-check-label" htmlFor={'checkbox-state-' + i}>
+                    {state.name}
+                  </label>
+                </div>
+              )
+            })}
+          </div>
+          <div className="col-12 col-lg-4 d-flex justify-content-end">
+            <button className="btn btn-primary" onClick={() => this.createOrder()}>
+              Add new order
+            </button>
+          </div>
         </div>
         <div className="row">
           {orders}
         </div>
-      </div >
+      </div>
     )
   }
 }
