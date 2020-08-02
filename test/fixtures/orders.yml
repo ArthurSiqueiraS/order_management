@@ -1,7 +1,13 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
-one:
-  state: MyString
+pending:
+  id: 1
+  state: pending
 
-two:
-  state: MyString
+in_progress:
+  id: 2
+  state: in_progress
+
+completed:
+  id: 3
+  state: completed
