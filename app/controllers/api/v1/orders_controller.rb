@@ -1,6 +1,6 @@
 class Api::V1::OrdersController < ApplicationController
   def index
-    orders = Order.all
+    orders = Order.filter(params)
 
     render json: orders
   end
@@ -20,13 +20,11 @@ class Api::V1::OrdersController < ApplicationController
   def update
     return not_found if order.nil?
 
-    if order.may_start?
-      order.start!
-    elsif order.may_complete?
-      order.complete!
+    if order.step!
+      render json: order
+    else
+      render json: { message: "The order can't be updated" }
     end
-
-    render json: order
   end
 
   def destroy

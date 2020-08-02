@@ -13,4 +13,23 @@ class Order < ApplicationRecord
       transitions from: :in_progress, to: :completed
     end
   end
+
+  def step!
+    if may_start?
+      start!
+    elsif may_complete?
+      complete!
+    end
+  end
+
+  class << self
+    def filter(params)
+      query = {}
+
+      query[:id] = params[:number] if params[:number].present?
+      query[:state] = params[:states] if params[:states].present?
+
+      Order.where(query)
+    end
+  end
 end
